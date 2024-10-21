@@ -1,0 +1,8 @@
+name: bbmap
+channels:
+  - bioconda
+  - conda-forge
+  - nodefaults
+dependencies:
+  - bbmap=38.91
+  - xopen=0.8.4

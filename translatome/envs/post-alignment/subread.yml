@@ -1,0 +1,10 @@
+name: subread
+channels:
+  - bioconda
+  - conda-forge
+  - nodefaults
+dependencies:
+  - subread=2.0.1
+
+# subread for featureCounts
+# conda-forge required for dependencies

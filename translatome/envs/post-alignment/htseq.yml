@@ -1,0 +1,9 @@
+name: htseq
+channels:
+  - bioconda
+  - conda-forge
+  - nodefaults
+dependencies:
+  - htseq=0.13.5
+
+# conda-forge required for dependencies

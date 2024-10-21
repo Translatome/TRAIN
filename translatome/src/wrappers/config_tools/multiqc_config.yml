@@ -1,0 +1,3 @@
+remove_sections:
+  - fastqc_sequence_duplication_levels
+

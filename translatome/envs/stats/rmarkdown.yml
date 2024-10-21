@@ -1,0 +1,19 @@
+name: rmarkdown
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - r-ggplot2=3.4.1
+  - r-data.table=1.14.8
+  - r-pander=0.6.5
+  - r-gridExtra=2.3
+  - r-plyr=1.8.8
+  - r-plotly=4.10.1
+  - r-scales=1.2.1
+  - r-rmarkdown=2.21
+  - r-magick=2.7.4
+  - r-kableextra=1.3.4
+  - r-stringi=1.7.12
+  - r-dplyr=1.1.2
+  - r-cowplot
+  - r-stringr

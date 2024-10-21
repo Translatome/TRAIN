@@ -1,0 +1,9 @@
+name: samtools
+channels:
+  - bioconda
+  - conda-forge
+  - nodefaults
+dependencies:
+  - samtools=1.14
+
+# conda-forge required for dependencies

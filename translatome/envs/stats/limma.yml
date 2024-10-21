@@ -1,0 +1,10 @@
+name: limma
+channels:
+  - conda-forge
+  - bioconda
+  - nodefaults
+dependencies:
+  - bioconductor-edger=3.40.0
+  - r-ggplot2=3.4.1
+  - r-ggpubr=0.6.0
+  - r-data.table=1.14.8
