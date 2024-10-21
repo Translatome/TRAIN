@@ -1,0 +1,1114 @@
+---
+title: "Differential gene expression analysis report"
+bibliography: "`r paste0(getwd(), '/report/src/pol_seq_references.bib')`"
+link-citations: yes
+params:
+  rmd: "report.Rmd"
+output:
+  html_document:
+    toc: yes
+    toc_depth: 2
+    number_sections: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+    fig_caption: yes
+    theme: cosmo
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r infoscript, echo=FALSE, warning=FALSE, message=FALSE}
+#==============================================================================
+#                               General report                              
+#==============================================================================
+
+# Description:
+# ------------
+# General report on the statistical part, 
+# including the main graphs and tables of the statistical analysis.
+
+# Requirements:
+# -------------
+# All these packages are managed by the conda environment file
+
+# Executions:
+# -----------
+# Execution in snakemake rule:
+#    script:
+#       "../../../report/src/report_pol_seq.Rmd"
+
+# Execution without snakemake:
+# Replace all paths provided by snakemake in the snakemake value section
+
+# Credits:
+# --------
+# - Authors: Céline Mandier 
+# - Created: 2023-05-09
+# - License: CC BY-NC 4.0
+# - Version: 0.1.0
+
+
+# Inputs:
+# -------
+# - Bibliography file
+# - CSS file 
+#    Design of the general report 
+# - MSD plot on raw data
+# - Metacontrast file 
+# - Pathways differential expression folder
+# - Pathways categorization folder
+# - Pathways logplot
+# - Biotype genome file 
+# - Pathways enrichment folder
+
+# Outputs:
+# --------
+# - general report 
+#     HTML file
+```
+
+
+
+```{r, echo = FALSE}
+#Import css file 
+css_file <- paste0(snakemake@scriptdir, "/style.css")
+```
+
+```{css, code=xfun::read_utf8(css_file), echo=FALSE}
+``` 
+
+
+```{r library, echo=FALSE, warning=FALSE, message=FALSE}
+# Import libraries
+library(pander)
+library(data.table)
+library(kableExtra)
+library(ggplot2)
+library(plyr)
+library(gridExtra)
+library(plotly)
+library(scales)
+library(dplyr)
+library(cowplot)
+library(stringr)
+```
+
+<header>
+
+```{r authordate, echo=FALSE}
+pander(cat("<div class='author'>",snakemake@params[['author']],"</div>"))
+pander(cat("<div class='date'>", format(Sys.time(), '%d %B, %Y'), "</div>"))
+```
+
+</header>
+
+&nbsp;
+
+# Background of the analysis
+
+```{r context, echo=FALSE}
+# Display context of analysis
+pander(cat(snakemake@params[["context"]]))
+```
+
+&nbsp;
+
+# Primary visualization
+
+Here, a variation of the usual multidimensional scaling MDS (or principal 
+coordinate) plot was performed using plotMDS() edgeR function for the 
+appropriate distance measure in an expression set context. This allows to plot 
+differences in expression profiles between different samples. The distance 
+between each pair of samples (columns) is the root-mean-square deviation 
+(Euclidean distance) for the top genes. The distances on the plot can be 
+interpreted as the leading log2-fold change, that is, the typical 
+(root-mean-square) log2-fold change between samples for the genes that 
+distinguish those samples.
+
+This MDS plot was made on the raw data for examining how different are the 
+profiles produced by different experimental factors and for identifying 
+unexpected patterns, such as batch effects, that should be adjusted. Statisical 
+analysis can be performed by choosing between the limma-voom or DESeq2 tool. 
+If the samples are too scattered, use the limma-voom tool for batch effect 
+adjustment.
+
+&nbsp;
+
+```{r plot_raw_data, echo=FALSE, warning=FALSE, message=FALSE}
+# Display multi-dimensional scaling plot of raw data
+mds_raw <- paste0("../",snakemake@input[["mds_raw_data"]])
+pander(cat(
+  "<figure><img src=", mds_raw, " alt='MDS_raw' style='width:80%'> 
+  <figcaption>Fig.1 - Multdimensional scaling plot (MDS) on raw data.
+  </figcaption></figure>" 
+))
+```
+
+&nbsp;
+
+# Design of the model 
+
+
+```{r design, echo=FALSE, comment=NA, warning=FALSE, message=FALSE}
+
+# Display of the model design according to the chosen tool (limma or deseq2)
+var_tool <- snakemake@params[["toolstat"]]
+if (var_tool=="limma"){
+  pander(cat(
+    "The design of the model is defined with limma, it corresponds to ", 
+    "~0+combine+Replica with:" ,"<br>","<ul>","<li> 0 to set the intercept
+    to 0 to avoid overwriting the data </li>","<li> combine which is the
+    combination of Fraction, Treatment and Time</li>", "<li> Replica </li> </ul> For the construction of the design, use the documentation of [limma](https://bioconductor.org/packages/release/bioc/html/limma.html)."
+  ))
+}else{
+  pander(cat(
+    "The design of the model is defined with DESeq2, it corresponds to ",
+    "~combine with:" ,"<br>","<ul>","<li> combine which is the combination 
+    of Fraction, Treatment and Time </li> </ul> For the construction of the design, use the documentation of [DESeq2](https://bioconductor.org/packages/release/bioc/html/DESeq2.html)."
+  ))
+}
+
+```
+
+&nbsp;
+
+# Contrast
+
+Simple comparisons were made using the information entered in the metacontrast 
+file. They represent the comparison between treatments/controls for each 
+fraction (cytoplasmic/total vs. polysomal) and time. Double comparisons were 
+then performed to categorise the results between transcription and translation.
+
+&nbsp;
+
+```{r contrast, echo=FALSE, comment=NA, warning=FALSE, message=FALSE}
+# Create a figure to illustrate contrasts
+## Import metacontrast file
+metacontrast <- fread(
+  snakemake@input[["metacontrast"]],
+  header = TRUE, 
+  data.table = FALSE
+)
+
+## Empty list initialization
+listcomp_trans <- ""
+listcomp_trad  <- ""
+simpcomp_trans <- ""
+simpcomp_trad  <- ""
+doubcomp       <- ""
+l1 <- 1
+l2 <- 2
+for (li in 1:(length(metacontrast$fraction)/2)) {
+  ## Construct the contrast table for each contrast provided 
+  ## in the metacontrast file.
+  # For transcription
+  ### Creation of combination fraction treatment1
+  metacontrast$union1[l1] <- paste(
+    metacontrast$fraction[l1], ".",
+    metacontrast$treatment1[l1], ".",
+    metacontrast$time[l1], 
+    sep = ""
+  )
+  ### Creation of combination fraction_bis treatment2
+  metacontrast$union2[l1] <- paste(
+    metacontrast$fraction_bis[l1], ".",
+    metacontrast$treatment2[l1], ".",
+    metacontrast$time_bis[l1], 
+    sep = ""
+  )
+  
+  ### List of simple comparison
+  metacontrast$simplecomp[l1] <- paste(
+    metacontrast$union1[l1],
+    metacontrast$union2[l1], 
+    sep = "_vs_"
+  )
+  listcomp_trans <- metacontrast$simplecomp[l1]
+  
+  # For translation
+  ### Creation of combination fraction treatment1
+  metacontrast$union1[l2] <- paste(
+    metacontrast$fraction[l2], ".",
+    metacontrast$treatment1[l2], ".",
+    metacontrast$time[l2], 
+  sep = "")
+  ### Creation of combination fraction_bis treatment2
+  metacontrast$union2[l2] <- paste(
+    metacontrast$fraction_bis[l2], ".",
+    metacontrast$treatment2[l2], ".",
+    metacontrast$time_bis[l2], 
+    sep = ""
+  )
+  
+  ### List of simple comparison
+  metacontrast$simplecomp[l2] <- paste(
+    metacontrast$union1[l2],
+    metacontrast$union2[l2], 
+    sep = "_vs_"
+  )
+  listcomp_trad <- metacontrast$simplecomp[l2]
+
+  
+  ### Double comparison
+  inter <- interaction(
+    metacontrast$simplecomp[l1], 
+    metacontrast$simplecomp[l2], 
+    sep = "_VS_"
+  )
+  ### CSS for figure
+  doubcomp <- paste0(
+    doubcomp, 
+    "<div class='itdouble transtrad'>", 
+    inter, "</div>"
+  )
+
+  ### CSS for figure
+  simpcomp_trans <- paste0(
+    simpcomp_trans, 
+    "<div class='item trans'>", 
+    listcomp_trans, "</div>"
+  )
+  simpcomp_trad <- paste0(
+    simpcomp_trad, 
+    "<div class='item trad'>", 
+    listcomp_trad,"</div>"
+  )
+  l1 <- l1 + 2
+  l2 <- l2 + 2
+}
+
+
+### Display figure
+pander(cat(
+  "<figure><div class='double'><div class='simple column'><div class='colortrans'>
+  Transcription</div>", simpcomp_trans, "<div class='colortrad'>Translation
+  </div>",simpcomp_trad,"</div><img class='simple arrow' src='img/arrow.png'>
+  <div class='simple'><div class='colordoub'>Transcription / Translation</div>",
+  doubcomp,"</div></div></figure>"
+))
+```
+
+&nbsp;
+
+# General statistics on filtered and normalized data
+
+
+The PCA of the two primary dimensions shows how the samples are distributed 
+according to the combination of fraction, treatment and time. 
+Replicates are highlighted.
+
+```{r plot_norm_data, echo=FALSE, warning=FALSE, message=FALSE}
+# Display multi-dimensional scaling plot or PCA of standardised data 
+# according to the chosen tool (limma or deseq2)
+var_tool <- snakemake@params[["toolstat"]]
+if (var_tool=="limma"){
+  mds_norm <- paste0(
+    "../", snakemake@input[["diff_genes"]], 
+    "/plotMDS_norm_data_kinetic.png"
+  )
+  voom_trend <- paste0(
+    "../", snakemake@input[["diff_genes"]], 
+    "/mean-variance_trend_kinetic.png"
+  )
+  screenHist_lim <- paste0(
+    "../", snakemake@input[["diff_genes"]], 
+    "/ScreeHist_plot.png"
+  )
+  pander(cat(
+    "<figure><img src=", mds_norm, " alt='MDS_norm' style='width:80%'> 
+    <figcaption>Fig.2 -Multidimensional scaling plot (MDS) on normalized data 
+    based on the design described in the 'Design of the model' section for the 
+    limma package.</figcaption></figure>", "<figure><img src=", screenHist_lim ,
+    " alt='screenHist_lim' style='width:80%'> <figcaption>Fig.3 - Scree-plot for 
+    the design described in the 'Design of the model' section for the limma-voom 
+    package. </figcaption></figure>", " &nbsp;The scree plot of the captured 
+    variability shows how many dimensions are needed to try to reach the 
+    threshold of 80% of the variance","<figure><img src=", voom_trend ,
+    " alt='voom-trend' style='width:80%'> <figcaption>Fig.4 - The voom trend 
+    for experimental genes: Gene-wise means and variances of RNA-seq data are 
+    represented by black points with a LOWESS trend. </figcaption></figure>"
+  ))
+}else{
+  pca_norm <- paste0(
+    "../", snakemake@input[["diff_genes"]], 
+    "/PCA_combine_replicate.png"
+  )
+  dispersion <- paste0(
+    "../", snakemake@input[["diff_genes"]],
+    "/dispersionPlot.png"
+  )
+  screenHist <- paste0(
+    "../", snakemake@input[["diff_genes"]], 
+    "/ScreeHist_plot.png"
+  )
+  
+  pander(cat(
+    "<figure><img src=", pca_norm," alt='PCA_deseq'> <figcaption>Fig.2 - 
+    Principal component analysis (PCA) performed on normalized data based on 
+    the design described in the 'Design of the model' section for the DESeq2 
+    package. </figcaption></figure>", "<figure><img src=", dispersion, 
+    " alt='dispersion' style='width:45%'><img src=", screenHist,
+    " alt='screenHist' style='width:45%'><figcaption>Fig.3 & 4 - Dispersion 
+    plot for normalized data and scree-plot for the design described in the 
+    'Design of the model' section for the DESeq2 package. </figcaption>
+    </figure>", " &nbsp;The dispersion of the data is plotted to see how well 
+    it fits the model (the red line). The data used in the analysis are shown 
+    in blue. The scree plot of the captured variability shows how many 
+    dimensions are needed to try to reach the threshold of 80% of the variance 
+    (Pareto dashed line in red)." 
+  ))
+}
+```
+
+&nbsp;
+
+```{r filter, echo=FALSE, comment=NA, warning=FALSE, message=FALSE}
+
+# Display of the filter choice according to the chosen tool (limma or deseq2)
+var_tool <- snakemake@params[["toolstat"]]
+if (var_tool=="limma"){
+  pander(
+    "The filtering applicated with limma, keeps genes that have CPM >= 
+    CPM.cutoff in MinSampleSize samples, where : <br><ul><li>CPM.cutoff = 
+    min.count/median(lib.size)*1e6</li> <li>and MinSampleSize is the smallest 
+    group sample size or, more generally, the minimum inverse leverage computed 
+    from the design matrix </li></ul><br>(See the filterByExpr() function of 
+    [EdgeR](https://bioconductor.org/packages/release/bioc/html/edgeR.html) 
+    package documentation  for more information)."
+  )
+}else{
+  if(snakemake@params[["filtering_method"]] =="edger"){
+    pander(
+      "The filtering choiced with deseq2, keeps genes that have CPM >= 
+      CPM.cutoff in MinSampleSize samples, where : <br><ul><li>CPM.cutoff = 
+      min.count/median(lib.size)*1e6</li> <li>and MinSampleSize is the smallest 
+      group sample size or, more generally, the minimum inverse leverage 
+      computed from the design matrix </li></ul><br>(See the filterByExpr() 
+      function of 
+      [EdgeR](https://bioconductor.org/packages/release/bioc/html/edgeR.html) 
+      package documentation  for more information)."
+    )
+  }else if(snakemake@params[["filtering_method"]] =="deseq") {
+    pander(
+      "The 'deseq' filtering is performed on the counts that have had an initial
+      normalisation on the size of the libraries. If the sum of the counts for 
+      a gene is less than 10, the gene is eliminated from the count table (See 
+      the 
+      [DESeq2](https://bioconductor.org/packages/release/bioc/html/DESeq2.html) 
+      package documentation for more information)."
+    )
+  }else{
+    pander(
+      "The 'default' filtering is performed on the counts that have had an 
+      initial normalisation on the size of the libraries. If the sum of the 
+      counts for a gene is less than 1, the gene is eliminated from the count 
+      table (See the 
+      [DESeq2](https://bioconductor.org/packages/release/bioc/html/DESeq2.html) 
+      package documentation for more information)."
+    )
+  }
+
+}
+
+```
+
+&nbsp;
+
+# Biotype
+
+The histogram below shows the types of genes (protein, RNA, pseudogene, etc.) 
+present in the experimental data (list of genes obtained after data filtering) 
+and in the selected reference genome. 
+
+To briefly summarize the gene types, some groupings and modifications 
+have been made:
+
+- The biotypes IG (immunoglobulin gene undergoing somatic recombination) and TR (T cell receptor gene undergoing somatic recombination) have been removed.
+- TEC (To be Experimentally Confirmed) and '-' were grouped together in the category 'unknown'.
+- Genes with a pseudogene suffix and prefix (including RNA pseudogenes) were grouped into the *pseudogene category.
+- Genes with an RNA suffix and prefix were grouped together, excluding lncRNA (separate category) and RNA pseudogenes.
+- Genes belonging to the protein-coding biotype are represented by the same category.
+
+&nbsp;
+
+<div class='bioplot'>
+```{r biotype_plot, echo=FALSE, out.width='100%', comment=NA, warning=FALSE, message=FALSE, fig.cap = "Fig.5 - Proportions of each gene type in the reference genome (A) and the experimental set (B)"}
+
+# Display biotype plot for reference genome 
+## Import biotype reference genome file 
+biotype_genome <- fread(
+  snakemake@input[["biotype"]], 
+  header = TRUE, 
+  data.table = FALSE
+)
+
+## Number of genes for each biotype
+### Number of all genes
+tot_all_gene <- nrow(biotype_genome)  
+### Remove biotype IG 
+filtred_IG <-  subset(
+  biotype_genome, 
+  ! startsWith(as.character(Biotype), "IG")
+) 
+### Remove biotype TR  
+biotype_genome_filtred <-  subset(
+  filtred_IG, 
+  ! startsWith(as.character(Biotype), "TR")
+) 
+### Remove biotype TR  
+tot_pseudo <-  nrow(
+  biotype_genome_filtred[grepl(
+    "pseudogene", 
+    biotype_genome_filtred$Biotype
+  ),]
+) 
+### Remove of pseudogene because presence RNA pseudogene
+filtred_pseudo <- biotype_genome_filtred[! grepl(
+  "pseudogene", 
+  biotype_genome_filtred$Biotype
+),] 
+### Number of protein_coding
+tot_prot_coding <- nrow(subset(
+  filtred_pseudo, 
+  Biotype == "protein_coding"
+)) 
+### Number of lncRNA
+tot_lncRNA <-  nrow(subset(
+  filtred_pseudo,
+  Biotype == "lncRNA"
+))
+### Number of unknow
+unknow <- nrow(subset(
+  filtred_pseudo, 
+  Biotype == "TEC" | Biotype == "-"
+))
+### Number of RNA (without lncRNA)
+tot_RNA_without_lnc <-  (nrow(
+  filtred_pseudo[grepl(
+    "RNA", 
+    filtred_pseudo$Biotype
+  ),]
+)) - tot_lncRNA
+
+## Table
+propoall <- data.frame(
+  Type_Gene=c(
+    "prot_coding", "lncRNA", 
+    "*pseudogene", "*RNA", 
+    "strange", "total"
+  ), ### Choose strange for unknown due to alphabetical order 
+  Number=c(
+    tot_prot_coding, tot_lncRNA, 
+    tot_pseudo, tot_RNA_without_lnc, 
+    unknow, tot_all_gene
+  )
+)
+
+## Graph 
+pp <- ggplot(data = propoall, aes(
+  x=Type_Gene, 
+  y=round(Number/tot_all_gene, digits = 2), 
+  fill=Type_Gene, text = paste(
+    "Type of gene:", Type_Gene,
+    "<br>Number:", Number,
+    "<br>Proportion:", round(Number/tot_all_gene*100, digits = 2), "%"
+  )
+)) +
+  geom_bar(stat='identity') +
+  scale_y_continuous(labels=percent) +
+  theme(
+    legend.position = "none", 
+    axis.text.x = element_text(angle = 45, hjust=1, size = 8),
+    axis.title.x = element_text(size = 10),
+    axis.title.y = element_text(size = 10)
+  ) +
+  annotate("text", x = 1.5, y = 0.95, label = "A") +
+  geom_text(
+    aes(label = Number), 
+    stat = "identity", 
+    vjust = -.5,
+    size = 3
+  ) + 
+  xlab("Type Gene") + 
+  ylab("Percent") + 
+  scale_x_discrete(labels=c(
+    "prot_coding" = "Prot coding", 
+    "total" = "Total", 
+    "strange" ="Unknow" 
+  )) 
+
+# Display biotype plot for experimental genes
+# selection of one categorization file
+liste_file_cat <- list.files(
+  snakemake@input[["cat_diff_genes"]], 
+  pattern = "Categorization_", 
+  full.names = TRUE
+)
+file_biotype_exp <- liste_file_cat[1]
+
+biotype_exp <- fread(
+  file_biotype_exp, 
+  header = TRUE, 
+  data.table = FALSE
+)
+
+## Number of genes for each biotype
+### Number of all genes 
+tot_all_gene_exp<- nrow(biotype_exp) 
+### Remove biotype IG 
+filtred_exp_IG <-  subset(
+  biotype_exp, 
+  ! startsWith(as.character(Biotype), "IG")
+) 
+### Remove biotype TR 
+biotype_exp_filtred <-  subset(
+  filtred_exp_IG, 
+  ! startsWith(as.character(Biotype), "TR")
+)  
+### Number of pseudogene
+tot_pseudo_exp <-  nrow(
+  biotype_exp_filtred[grepl(
+    "pseudogene", 
+    biotype_exp_filtred$Biotype
+  ),]
+) 
+### Remove of pseudogene because presence RNA pseudogene
+filtred_pseudo_exp <- biotype_exp_filtred[! grepl(
+  "pseudogene", 
+  biotype_exp_filtred$Biotype
+),] 
+### Number of protein_coding
+tot_prot_coding_exp <- nrow(subset(
+  filtred_pseudo_exp, 
+  Biotype == "protein_coding"
+)) 
+### Number of lncRNA
+tot_lncRNA_exp <-  nrow(subset(
+  filtred_pseudo_exp, 
+  Biotype == "lncRNA"
+))
+### Number of unknow
+unknow_exp <- nrow(subset(
+  filtred_pseudo_exp, 
+  Biotype == "TEC" | Biotype == "-"
+))
+### Number of RNA (without lncRNA)
+tot_RNA_without_lnc_exp <- (nrow(
+  filtred_pseudo_exp[grepl(
+    "RNA", 
+    filtred_pseudo_exp$Biotype
+  ),]
+)) - tot_lncRNA_exp 
+
+## Table
+propo_exp <- data.frame(
+  Type_Gene=c(
+    "prot_coding", "lncRNA", 
+    "*pseudogene", "*RNA", 
+    "strange", "total"
+  ),
+  Number=c(
+    tot_prot_coding_exp, tot_lncRNA_exp, 
+    tot_pseudo_exp, tot_RNA_without_lnc_exp, 
+    unknow_exp, tot_all_gene_exp
+  )
+)
+
+## Graph 
+pexp <- ggplot(data = propo_exp, aes(
+  x=Type_Gene, 
+  y=round(Number/tot_all_gene_exp, digits = 2), 
+  fill=Type_Gene, 
+  text = paste(
+    "Type of gene:", Type_Gene,
+    "<br>Number:", Number,
+    "<br>Proportion:", round(Number/tot_all_gene_exp*100, digits = 2), "%"
+  )
+)) +
+  geom_bar(stat='identity') +
+  scale_y_continuous(labels=percent) +
+  theme(
+    legend.position = "none", 
+    axis.text.x = element_text(angle = 45, hjust=1, size = 8),
+    axis.title.x = element_text(size = 10),
+    axis.title.y = element_text(size = 10)
+  ) +
+  annotate("text", x = 1.5, y = 0.95, label = "B")+
+  geom_text(
+    aes(label = Number),
+    stat = "identity", 
+    vjust = -.5,
+    size = 3
+  ) + 
+  xlab("Type Gene") + 
+  ylab("Percent") + 
+  scale_x_discrete(labels=c(
+    "prot_coding" = "Prot coding", 
+    "total" = "Total", 
+    "strange" ="Unknow" 
+  ))
+
+        
+plot_grid(pp, pexp, ncol = 2, nrow = 1)
+
+
+```
+</div>
+
+&nbsp;
+
+# Simple comparison 
+
+
+```{r simple_comparison, echo=FALSE, comment=NA, warning=FALSE, message=FALSE}
+# Display summary significant genes for simple comparison
+file_comp_simp <- paste0(
+  snakemake@input[["diff_genes"]], 
+  "/Summary_significant_genes.tsv"
+)
+comp_simp <- fread(
+  file_comp_simp, 
+  header = TRUE, 
+  data.table = FALSE
+)
+colnames(comp_simp) <- c(
+  "Comparison", "Tot_present_genes", 
+  "Tot_filtered_genes", "Sig_genes_tot", 
+  "Sig_genes_UP", "Sig_genes_DN"
+)
+comp_simp %>%
+  kbl(caption = "Summary of significant genes of the simple comparison") %>%
+  row_spec(0,bold=TRUE) %>%
+  kable_classic(full_width = T, html_font = "Futura") %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"), 
+    font_size = 15
+  )
+  
+```
+
+&nbsp;
+
+# Double comparison
+
+
+## Log-log plot 
+
+
+
+The exploration of data to determine the proportion of genes involved in 
+translation and/or transcription is illustrated in the following graphs :
+
+```{r plot_double_comparison, echo=FALSE, warning=FALSE, message=FALSE}
+# Recovery of summary file names
+liste_scatter<- list.files( # 
+  snakemake@input[["logplot"]], 
+  pattern = "Scatter_plot_log2FC_.+png", 
+  full.names = TRUE
+)
+
+# Add ../ for image beacause report begin in report folder but for other thing 
+# it begin in folder root translatome
+logplot_path <- paste0("../", liste_scatter, sep="") 
+
+# Recovery the comparison
+pathscatter   <- strsplit(liste_scatter, split = "/")
+name_scatter  <- sapply(pathscatter, tail, 1)
+comp <- gsub(".png", "",name_scatter)
+tbl_logplot <- data.frame("Comparaison"= comp, "Logplot"="")
+
+# Display one log-log plot (scatter plot) of double comparison
+tbl_logplot %>%  
+  kbl(
+    caption = "Explore the log2FC data for the dual comparison to see the 
+    proportion of genes involved in translation, transcription, or both.",
+    align = "c"
+  ) %>%
+  row_spec(0,bold=TRUE) %>%
+  kable_classic(full_width = F, html_font = "Futura") %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"), 
+    font_size = 15,
+    position = "center"
+  ) %>%
+  column_spec(2, image = logplot_path)
+```
+
+&nbsp;
+
+## Summary of double comparaison
+
+
+```{r double_comparison, echo=FALSE, comment=NA, warning=FALSE}
+# Import summary of double comparison for each contrast and preprocessing
+importsummary <- function(file){
+  sumcat <- fread(file, header = FALSE, data.table = FALSE)
+  sumcat <- sumcat[-1,] # Remove first line (header)
+  sumcat <- t(sumcat) # Table transposition
+  # Allocation of the first row in colnames (categories)
+  colnames(sumcat) <- sumcat[1,] 
+  sumcat <- sumcat[-1,]
+  return(sumcat)
+}
+
+# Recovery of summary file names
+liste_csv <- list.files(
+  snakemake@input[["cat_diff_genes"]], 
+  pattern = "Summary_categories", 
+  full.names = TRUE
+)
+
+# Creation of basic table 
+recap_cat <- data.frame(
+  "Not_significant"="", "Total_sig_genes"="",
+  "Both_mRNA_UP"="", "Both_mRNA_DOWN"="", 
+  "Transcription_UP"="", "Transcription_DOWN"="", 
+  "Translation_UP"="", "Translation_DOWN"="", 
+  "Divergent_UPDN"="", "Divergent_DNUP"=""
+)
+
+# Initialization lists of time and comparison 
+list_comp <- list()
+list_time <- list()
+
+# Recovery of values from each summary file
+for (index in 1:length(liste_csv)){
+  ## Recovery each comparison
+  pathfile   <- strsplit(liste_csv[index], split = "/")
+  namefile   <- sapply(pathfile, tail, 1)
+  split_name <- strsplit(namefile, split = "_")
+  comp_time  <- sapply(split_name, tail, 2)
+  comp <- comp_time[1]
+  ## Recovery the time for each comparison
+  timing <- comp_time[2]
+  timing <- gsub(".tsv", "",timing)
+  
+  ## Import formatted summary file 
+  tablesum <- importsummary(liste_csv[index])
+  
+  ## Increment the base table with each value from the summary files 
+  ## for each comparison
+  recap_cat[index,] <- tablesum
+  list_comp <- append(list_comp,comp)
+  list_time <- append(list_time, timing)
+}
+
+recap_cat$Time       <- list_time
+recap_cat$Comparison <- list_comp
+
+# Structuring the final table
+## Recovery the list of comparison
+uniq_comp <- unique(recap_cat$Comparison)
+
+## Initialization of empty table
+recap_cat2 <- data.frame(
+  "Not_significant"="", "Total_sig_genes"="",
+  "Both_mRNA_UP"="", "Both_mRNA_DOWN"="", 
+  "Transcription_UP"="", "Transcription_DOWN"="", 
+  "Translation_UP"="", "Translation_DOWN"="",
+  "Divergent_UPDN"="", "Divergent_DNUP"="",
+  "Time"="","Comparison"= ""
+)
+
+## Alternative concatenation of a comparison line with the values corresponding  
+## to the comparison and the associated time
+for  (i in uniq_comp){
+  ### Recovery of values for unique comparison
+  sub <- subset(recap_cat, Comparison==i) 
+  ### Initialization table
+  name_comp <- c(
+    "Not_significant"="", "Total_sig_genes"="",
+    "Both_mRNA_UP"="", "Both_mRNA_DOWN"="", 
+    "Transcription_UP"="", "Transcription_DOWN"="", 
+    "Translation_UP"="", "Translation_DOWN"="", 
+    "Divergent_UPDN"="", "Divergent_DNUP"="", 
+    "Time"=i,"Comparison"= "")
+  ### Concatenation the line comparison with the incremented table
+  recap_cat2 <- rbind(recap_cat2, name_comp)
+  ### Concatenation table with table of values
+  recap_cat2 <- rbind(recap_cat2, sub)
+}
+## Remove the first line (empty)
+recap_cat2 <- recap_cat2[-1,] 
+index_name_comp <- list() #initialization of index for print line with background blue
+
+## Index for print line with background blue and indent line
+for (j in 1:nrow(recap_cat2)){
+  if (recap_cat2$Comparison[j] == ""){
+    index_name_comp <- append(index_name_comp, j)
+  }else{
+  }
+nbline <- 1:nrow(recap_cat2)
+index_indent_line <- nbline[-as.numeric(index_name_comp)]
+
+} 
+## Clean table
+recap_cat2  <- recap_cat2[,4:ncol(recap_cat2)-1]
+final_table <- recap_cat2 %>%
+  relocate(Time)
+colnames(final_table) <- c(
+  "Comparison","Both_UP","Both_DN", 
+  "Transcription_UP", "Transcription_DN", 
+  "Translation_UP", "Translation_DN", 
+  "Div_UPDN", "Div_DNUP"
+)
+
+# Display final table
+final_table %>%
+  kbl(
+    caption = "Summary of significant genes of the double comparison", 
+    row.names = FALSE
+  ) %>%
+  row_spec(0,bold=TRUE) %>%
+  kable_classic(full_width = T, html_font = "Futura") %>%
+  kable_styling(
+    position = "center", 
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"), 
+    font_size = 15
+  ) %>%
+  row_spec(
+    as.numeric(index_name_comp), 
+    bold = T, 
+    color = "black", 
+    background = "#6CA4C8"
+  ) %>%
+  add_indent(index_indent_line)
+  
+```
+
+&nbsp;
+
+# Enrichment
+
+## gProfiler2
+
+```{r titlegpro, echo=FALSE, comment=NA, warning=FALSE}
+if (snakemake@params[["toolenrich"]]=="gprofiler"){
+  pander(
+    "gProfiler2 performs a functional enrichment analysis on a list of 
+    significant input genes.  It compares the genes to known sources of 
+    functional information and detects statistically significant enriched terms. 
+    The size of the statistical domain N describes the total number of genes 
+    used for random selection and is one of the four parameters of the 
+    hypergeometric probability function of statistical significance used in 
+    gProfiler. Here, we use genes from the reference genome. <br> For the 
+    significant genes in each category, in each comparison, we perform an 
+    enrichment analysis for the sources of interest. The table below shows 
+    the number of enrichment terms found for each source per comparison and 
+    category."
+  )
+} else {
+  pander("No enrichment required")
+}
+```
+<center>
+```{r sumgpro, echo=FALSE, comment=NA, warning=FALSE}
+if (snakemake@params[["toolenrich"]]=="gprofiler"){
+  # Recovery of summary file names
+  dir_list <- list.dirs(
+    snakemake@params[["enrichment"]],
+    recursive = FALSE, 
+    full.names = FALSE
+  ) 
+  comp_folder <- dir_list[! dir_list %in% "goatools_reference_files"]
+  
+  recap_sum_gpro <- data.frame(
+    "Comparison"="", "Categorie"="", 
+    "CORUM"="","GOBP"="", 
+    "GOCC"="", "GOMF"="", 
+    "KEGG"="", "REAC"="", 
+    "WP"=""
+  )
+  recap_sum_gpro <- recap_sum_gpro[-1,] # Remove the first line (empty)
+  
+  for (index_comp in 1:length(comp_folder)){
+    pathsum <- paste0(
+      snakemake@params[["enrichment"]],"/",
+      comp_folder[index_comp],
+      "/summary/gprofiler_summary.csv"
+    )
+    sumcat <- fread(
+      pathsum, 
+      header = TRUE, 
+      data.table = FALSE
+    )
+    sumcat$Comparison <- rep(comp_folder[index_comp], nrow(sumcat))
+    sumcat <- sumcat %>%
+      relocate(Comparison)
+    recap_sum_gpro <- rbind(recap_sum_gpro, sumcat)
+  }
+  
+  recap_sum_gpro2 <- c(
+    "Comparison"="", "Categorie"="", 
+    "CORUM"="","GOBP"="", 
+    "GOCC"="", "GOMF"="", 
+    "KEGG"="", "REAC"="", 
+    "WP"="") # Initialization table
+  
+  uniq_compar <- unique(recap_sum_gpro$Comparison)
+  
+  for  (i in uniq_compar){
+    # Recovery of values for unique comparison
+    sub <- subset(recap_sum_gpro, Comparison==i)
+    name_comp <- c(
+      "Comparison"="", "Categorie"=i, 
+      "CORUM"="","GOBP"="", 
+      "GOCC"="", "GOMF"="", 
+      "KEGG"="", "REAC"="", 
+      "WP"="") # Initialization table
+    # Concatenation the line comparison with the incremented table
+    recap_sum_gpro2 <- rbind(recap_sum_gpro2, name_comp)
+    # Concatenation table with table of values
+    recap_sum_gpro2 <- rbind(recap_sum_gpro2, sub)
+  }
+  
+  recap_sum_gpro2 <- recap_sum_gpro2[-1,] # Remove the first line (empty)
+  # Initialization of index for print line with background blue
+  index_name_compar <- list() 
+  
+  for (j in 1:nrow(recap_sum_gpro2)){
+    if (recap_sum_gpro2$Comparison[j] == ""){
+      index_name_compar <- append(index_name_compar, j)
+    }else{
+    }
+    nbline <- 1:nrow(recap_sum_gpro2)
+    index_indent <- nbline[-as.numeric(index_name_compar)]
+  }
+  
+  recap_sum_gpro2 <- recap_sum_gpro2[,2:ncol(recap_sum_gpro2)]
+  recap_sum_gpro2 %>%
+    kbl(
+      caption = "Number of enrichment terms found for each source per comparison and category", 
+      row.names = FALSE
+    ) %>%
+    row_spec(0,bold=TRUE) %>%
+    kable_classic(full_width = T, html_font = "Futura") %>%
+    kable_styling(
+      position = "center", 
+      bootstrap_options = c("striped", "hover", "condensed", "responsive"), 
+      font_size = 15
+    ) %>%
+    row_spec(
+      as.numeric(index_name_compar), 
+      bold = T, 
+      color = "black", 
+      background = "#6CA4C8"
+    ) %>%
+    add_indent(index_indent)
+
+}
+```
+</center>
+
+&nbsp;
+
+## goatools
+
+```{r titlegoatools, echo=FALSE, comment=NA, warning=FALSE}
+if (snakemake@params[["toolenrich"]]=="gprofiler"){
+  histo_fold <- paste0("../", snakemake@params[["enrichment"]])
+  pander(cat(
+    "Using goatools, we propose to provide the hierarchy of GO terms 
+    (BP, CC, and MF) highlighted by gProfiler2 for each comparison and each 
+    category. The histograms below illustrates the number of terms present at 
+    each depth of the hierarchy (for BP, MF and CC) for each category for a 
+    given comparison. Another variant of the histogram is also available, 
+    representing the hierarchy levels. All histograms are available in 
+    [enrichment_GSEA](",histo_fold,")/comparison/summary/."
+  ))
+} else {
+  pander("No enrichment required")
+}
+```
+
+
+```{r histogoa, echo=FALSE, warning=FALSE, message=FALSE}
+
+if (snakemake@params[["toolenrich"]]=="gprofiler"){
+  dir_fold <- list.dirs( 
+    snakemake@params[["enrichment"]],
+    recursive = FALSE, 
+    full.names = TRUE
+  )
+  comp_fold <- dir_fold[!str_detect(dir_fold,pattern="goatools_reference_files")]
+  histo <- paste0(
+    "../", comp_fold,"/summary/goatools_summary_depth_graph.png"
+  )
+  # Recovery the comparison
+  pathhisto   <- strsplit(comp_fold, split = "/")
+  comp  <- sapply(pathhisto, tail, 1)
+  tbl_goat<- data.frame("Comparaison"= comp, "Enrichment"="")
+  tbl_goat%>%  
+  kbl(
+    caption = "",
+    align = "c"
+  ) %>%
+  row_spec(0,bold=TRUE) %>%
+  kable_classic(full_width = F, html_font = "Futura") %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"), 
+    font_size = 15,
+    position = "center"
+  ) %>%
+  column_spec(2, image = histo)
+}
+
+
+```
+
+&nbsp;
+
+# Comments
+
+
+
+```{r comments, echo=FALSE, warning=FALSE, message=FALSE}
+pander(snakemake@params[["comments"]])
+```
+
+&nbsp;
+
+# Acknowledgements
+
+
+```{r acknowledgements, echo=FALSE}
+pander(cat(snakemake@params[["aknow"]]))
+```
+
+
+<div class=mention>Pipeline</div>
+
+The development of pipeline for the community is supported by LIRMM 
+
+&nbsp;
+
+# References
+
+
+<div id="refs">
+---
+nocite: '@*'
+---
+</div>
+
+<hr>
+
+<footer>
+
+```{r logo, echo=FALSE}
+# Footer logo
+pander(cat(
+  "<div class='float-container'><div class='float-child logo'>
+  <img src='img/ATGC-logo-col-trp.png' alt='ATGC' style='width:50%'></div>
+  <div class='float-child logo'><img src='img/LogoLIRMM_sansfond.png' 
+  alt='LIRMM' style='width:60%'></div><div class='float-child logo'>
+  <img src='img/logo_um_2022_rouge_RVB.png' alt='UM' style='width:60%'></div>
+  <div class='float-child logo'><img src='img/LOGO_CNRS_2019_CMJN.gif' 
+  alt='CNRS' style='width:25%'></div></div>" 
+))
+```
+</footer>
+
