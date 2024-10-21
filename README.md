@@ -1,42 +1,20 @@
-# Translatome
+# TRAIN
 
-Workflow for polysome profiling analysis
+Translatome Regulations Analysis In a Nutshell (TRAIN): a Snakemake workflow for joint transcriptome and translatome categorization
 
-- [Translatome](#translatome)
-  - [Context](#context)
-  - [LICENSE](#license)
-  - [Contributions](#contributions)
-  - [Requirements](#requirements)
-  - [Installation](#installation)
-    - [Clone workflow into desired working directory](#clone-workflow-into-desired-working-directory)
-    - [Installation of Snakemake and Miniconda](#installation-of-snakemake-and-miniconda)
-    - [Installation of wrapper system package](#installation-of-wrapper-system-package)
-  - [Documentation](#documentation)
-  - [Configuration](#configuration)
-    - [Edit the configuration file and complete with your project information](#edit-the-configuration-file-and-complete-with-your-project-information)
-    - [Special requirements: Metadata and Metacontrast files](#special-requirements-metadata-and-metacontrast-files)
-  - [Execution](#execution)
-    - [Run the rule's documentation](#run-the-rules-documentation)
-    - [Run the snakefile in dry-run mode](#run-the-snakefile-in-dry-run-mode)
-    - [Steps](#steps)
-
----
+[Full Documentation](https://translatome.github.io/TRAIN/)
 
 ## Context
 
 Translation is the second phase of protein synthesis that involves converting the information on the mRNA sequence to an amino acid sequence.
-This process requires mRNA, ribosomes, amino acids, tRNA, and other factors.
-
-Translatomics is the study of all open reading frames (ORFs) that are being actively translated in a cell or organism.
-This collection of ORFs is referred to as the translatome.
-Characterizing a cell's translatome can give insight into the array of biological pathways that are active in the cell.
+This process requires mRNA, ribosomes, amino acids, tRNA, and other factors. Characterizing a cell's translatome can give insight into the array of biological pathways that are active in the cell.
 
 Polysome profiling is a technique that infer the translation status of a specific mRNA by analyzing the behavior of polysomes, i.e. to the group of ribosomes bound to an mRNA, that is present during the elongation phase of translation.
 Polysome profiling consists in the quantification of mRNA abundance in polysome fractionation by sucrose density gradient centrifugation.
 Based on the assumption that ribosome density is highly correlated with protein production, the translational efficiency of individual genes can be calculated.
-Translational efficiency is calculated by comparing two RNA-seq profiles, one for transcription (all mRNA) and one for translation (mRNA with ribosomes bound).
+Translational efficiency is calculated by comparing two RNA-seq profiles, one for transcription (mRNA) and one for translation (mRNA with ribosomes bound).
 
-We provide here a Snakemake workflow to analyze Polysome profiling (POL-SEQ). This workflow is composed of seven steps:
+We provide here a Snakemake workflow to analyze Polysome profiling (POL-seq) with transcriptome (RNA-seq). This workflow is composed of seven steps:
 
 - Download of reference files and Input checking
 - Quality checking
@@ -48,20 +26,12 @@ We provide here a Snakemake workflow to analyze Polysome profiling (POL-SEQ). Th
 
 This workflow is provided as is, without guaranty if any modification is made.
 
-Several packages and softwares are used here, please cite them or cite this GitHub Project.
+Several packages and softwares are used here, quote this GitHub Project.
+
+> Ripoll J., Mandier C., Chen F., Rivals E. (2024) Translatome Regulations Analysis In a Nutshell (TRAIN): a Snakemake workflow for joint transcriptome and translatome categorization. Github Repository. https://github.com/Translatome/TRAIN.git
 
 [<small>[top↑]</small>](#)
 
-## LICENSE
-
-[LICENSE](https://github.com/Translatome/Translatome/blob/master/LICENSE.md) terms are in agreement with CeCILL License.
-See: http://www.cecill.info/licences.fr.html
-
-## Contributions
-
-See the [contributing](https://github.com/Translatome/Translatome/blob/master/CONTRIBUTING.md) file and please follows the recommandation in the [code of conduct](https://github.com/Translatome/Translatome/blob/master/CODE_OF_CONDUCT.md)
-
-[<small>[top↑]</small>](#)
 
 ## Requirements
 
@@ -104,30 +74,30 @@ For installation of Miniconda, please refer to the official documentation and fo
 
 Here, this is an example:
 
-    Download the installer miniconda: https://conda.io/miniconda.html
-
-    In your Terminal window, run:
+> Download the installer miniconda: https://conda.io/miniconda.html
+>
+> In your Terminal window, run:
 
 ```shell
 bash Miniconda3-latest-Linux-x86_64.sh
 ```
 
-    Follow the prompts on the installer screens.
-
-    Install Snakemake in a dedicated environment
+> Follow the prompts on the installer screens.
+>
+> Install Snakemake in a dedicated environment
 
 ```shell
 conda install -c bioconda -c conda-forge -n snakemake snakemake python=3.10
 conda activate snakemake
 ```
 
-For Docker, install it before following their instructions: https://docs.docker.com/engine/install/.
+For Docker, install it following their instructions: https://docs.docker.com/engine/install/.
 
-    A docker image is available with Snakemake, Conda and Mamba on the Docker Hub.
-
-    The official docker image can be found at: [https://hub.docker.com/r/snakemake/snakemake](https://hub.docker.com/r/snakemake/snakemake)
-
-    For more informations on docker image, read the [official documentation](https://docs.docker.com/get-started/overview/).
+> A docker image is available with Snakemake, Conda and Mamba on the Docker Hub.
+>
+> The official docker image can be found at: [https://hub.docker.com/r/snakemake/snakemake](https://hub.docker.com/r/snakemake/snakemake)
+>
+> For more informations on docker image, read the [official documentation](https://docs.docker.com/get-started/overview/).
 
 
 ### Installation of wrapper system package
@@ -138,15 +108,6 @@ In order to install the wrappers on your computer, go to the translatome/ folder
 # require pip for python 3
 pip install .
 ```
-
-[<small>[top↑]</small>](#)
-
-
-## Documentation
-
-Complete documentation is available at [Translatome](https://jripoll.lirmm.net/translatome)
-
-The developer documentation was produced using sphinx.
 
 [<small>[top↑]</small>](#)
 
@@ -260,10 +221,10 @@ After the _00_download_references.smk_ step, complete the references files secti
 
 Take a look at all the log files before moving on to the next steps.
 
+
+> Note: This pipeline can be tested with these datasets:
+> - BioProject [PRJNA741225](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA741225) 75bp paired_end data, [Therizols et al. (2022)](https://doi.org/10.1038/s41467-021-27847-8), *Homo sapiens*, Illumina NextSeq 500
+> - BioProject [PRJNA397005](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA397005) 100bp single_end data, [Bernabo et al. (2017)](https://doi.org/10.1016/j.celrep.2017.10.010), *Mus muculus*, Illumina HiSeq 2000
+
+
 [<small>[top↑]</small>](#)
-
-
-Note: This pipeline can be tested with these datasets:
-- BioProject [PRJNA741225](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA741225) 75bp paired_end data, [Therizols et al. (2022)](https://doi.org/10.1038/s41467-021-27847-8), *Homo sapiens*, Illumina NextSeq 500
-- BioProject [PRJNA397005](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA397005) 100bp single_end data, [Bernabo et al. (2017)](https://doi.org/10.1016/j.celrep.2017.10.010), *Mus muculus*, Illumina HiSeq 2000
-
