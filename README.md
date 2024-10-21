@@ -9,8 +9,7 @@ Workflow for polysome profiling analysis
   - [Requirements](#requirements)
   - [Installation](#installation)
     - [Clone workflow into desired working directory](#clone-workflow-into-desired-working-directory)
-    - [Installation of Snakemake through MiniConda](#installation-of-snakemake-through-miniconda)
-    - [Installation of Snakemake through Docker](#installation-of-snakemake-through-docker)
+    - [Installation of Snakemake and Miniconda](#installation-of-snakemake-and-miniconda)
     - [Installation of wrapper system package](#installation-of-wrapper-system-package)
   - [Documentation](#documentation)
   - [Configuration](#configuration)
@@ -69,8 +68,8 @@ See the [contributing](https://github.com/Translatome/Translatome/blob/master/CO
 This workflow requires:
 
 - Python version >= 3.10
-- Snakemake version >= 7.14.0
-- Conda and/or Mamba
+- Snakemake version >= 7.12.0
+- Miniconda and Mamba
 - Download from distant databases for steps 00 and 06
 
 Most of the programs are installed using conda environments.
@@ -99,37 +98,37 @@ Copy the Translatome workflow in the desired folder [path/to/workdir]:
 git clone https://github.com/Translatome/Translatome.git [path/to/workdir]
 ```
 
-### Installation of Snakemake through MiniConda
+### Installation of Snakemake and Miniconda
 
-For installation of Conda, please refer to the [official documentation](https://conda.io/projects/conda/en/latest/user-guide/install/linux.html)
-and for Mamba, please also refer to the [official documentation](https://mamba.readthedocs.io/en/latest/installation.html).
+For installation of Miniconda, please refer to the official documentation and for Mamba, please also refer to the official documentation.
 
 Here, this is an example:
 
-1. Download the installer miniconda: [https://conda.io/miniconda.html](https://conda.io/miniconda.html)
+    Download the installer miniconda: https://conda.io/miniconda.html
 
-2. In your Terminal window, run:
+    In your Terminal window, run:
 
 ```shell
 bash Miniconda3-latest-Linux-x86_64.sh
 ```
 
-3. Follow the prompts on the installer screens.
+    Follow the prompts on the installer screens.
 
-4. Install Snakemake in a dedicated environment
+    Install Snakemake in a dedicated environment
 
 ```shell
 conda install -c bioconda -c conda-forge -n snakemake snakemake python=3.10
 conda activate snakemake
 ```
 
-### Installation of Snakemake through Docker
+For Docker, install it before following their instructions: https://docs.docker.com/engine/install/.
 
-The official docker image can be found at: [https://hub.docker.com/r/snakemake/snakemake](https://hub.docker.com/r/snakemake/snakemake)
+    A docker image is available with Snakemake, Conda and Mamba on the Docker Hub.
 
-This image contains conda, mamba and snakemake.
+    The official docker image can be found at: [https://hub.docker.com/r/snakemake/snakemake](https://hub.docker.com/r/snakemake/snakemake)
 
-For more informations on docker image, read the [official documentation](https://docs.docker.com/get-started/overview/).
+    For more informations on docker image, read the [official documentation](https://docs.docker.com/get-started/overview/).
+
 
 ### Installation of wrapper system package
 
