@@ -26,7 +26,7 @@ We provide here a Snakemake workflow to analyze Polysome profiling (POL-seq) wit
 
 This workflow is provided as is, without guaranty if any modification is made.
 
-Several packages and softwares are used here, quote this GitHub Project.
+Several packages and softwares are used, please quote them if you use one of these scripts or quote our GitHub Project.
 
 > Ripoll J., Mandier C., Chen F., Rivals E. (2024) Translatome Regulations Analysis In a Nutshell (TRAIN): a Snakemake workflow for joint transcriptome and translatome categorization. Github Repository. https://github.com/Translatome/TRAIN.git
 
