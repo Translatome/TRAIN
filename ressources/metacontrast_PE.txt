@@ -1,0 +1,3 @@
+fraction	treatment1	fraction_bis	treatment2
+CYTO	FU50	CYTO	CTL
+POLY	FU50	CYTO	CTL

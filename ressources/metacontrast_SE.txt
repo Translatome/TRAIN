@@ -1,0 +1,5 @@
+fraction	treatment1	fraction_bis	treatment2
+Tot	SMA	Tot	CTL
+Poly	SMA	Poly	CTL
+Tot	CTL	Tot	SMA
+Poly	CTL	Poly	SMA
