@@ -1,0 +1,173 @@
+---
+###############
+# Config file #
+###############
+
+### This is an example config file
+### All the informations in this document have to be checked and complete before analysis
+
+#######################################################################
+# General (mandatory)
+#######################################################################
+
+analysis: "kinetic" # can be pol-seq or kinetic
+
+
+#######################################################################
+# Data information (mandatory)
+#######################################################################
+
+## Fix the good path for your project
+#######################################################################
+
+### Path to Input folder
+inpfol: "test/data/dataSE/" # specify the folder where are fastq files
+md5files : "keys/md5_fastq_keys.txt" # specify your md5 file with keys of fastq files
+
+### Path to Results folder
+resfol: "test/results_SE/"
+
+### Path to References files
+ref_fol: "references_db/"
+
+### Metadata
+metadata: "ressources/metadata_kinetic.txt"
+
+### Metacontrast
+metacontrast: "ressources/metacontrast_kinetic.txt"
+
+
+## Paired-end data or not
+#######################################################################
+paired: "NO" # can be YES or NO
+
+
+## Number of biological replicates
+#######################################################################
+replicat: "3"
+
+
+## Information on raw data filename
+#######################################################################
+
+### exemple of filename: FRAC1_TREAT1_1_001.fastq.gz or FRAC1_TREAT1_1.fastq.gz 
+
+### Extension of raw fastq files
+extension_files: "fastq.gz"
+
+### Paired-end (PE) data only
+paired_info_1: "" # specify how your paired samples are defined with "_1"
+paired_info_2: "" # specify how your paired samples are defined with "_2"
+
+### End of raw file name for PE and SE
+end_filename: ".fastq.gz" # if specificities between the information of paired end and extension of files  e.g. _001.fastq.gz
+
+
+#######################################################################
+# References files (mandatory)
+#######################################################################
+
+## Organism infos for download of reference files (from ENSEMBL database)
+organism: "mus_musculus" # lower case only and no space as Ensembl database ids
+organismcode: "10090" # taxonomic code
+release: "108" # wanted release
+assembly_reference: "dna" # can be 'dna' for genome or 'cdna' for transcriptome
+extensionAnnotation: "gtf" # lower case mandatory; can be 'gtf' or 'gff'
+
+## Path to or name of references files (if path was modified)
+### (Change these after download with 00_download_references.smk)
+references:
+  assembly_ref: "Mus_musculus.GRCm38.dna.toplevel.fa"
+  annotation: "Mus_musculus.GRCm38.108.gtf"
+
+
+#######################################################################
+# Available tools (mandatory)
+#######################################################################
+
+## Tools to use:
+tools:
+  trimming: "cutadapt" # can be cutadapt or fastp
+  count: "htseq" # can be htseq or featurecounts
+  stats: "deseq2" # can be deseq2 or limma (use limma-voom from edgeR)
+  enrichment: "gprofiler" # requires a connection to the web, can be "gprofiler" or "None"
+
+
+#######################################################################
+# Pipeline parameters (mandatory)
+#######################################################################
+
+##THREADS
+#######################################################################
+threads: 3 # change according to your computer or cluster
+
+
+## Params for trim on quality threshold
+#######################################################################
+trim:
+  # common options
+  quality: "30" # phred score limit
+  minilength: "65" # minimal read lenght at the end
+  # cutadapt options
+  fref: "'file:ressources/adapters.fa'" # file with all known adaptors
+  kmersize: "21" # k-mer size for trim
+  cutphred: "30,30" # If one value is given, only the 3' end is trimmed. If two comma-separated cutoffs are given, the 5' end is trimmed with the first cutoff, the 3' end with the second.
+  cutlength1: "12" # for 5'end cut, if LEN is positive remove bases from the beginning. If LEN is negative, remove bases from the end.
+  cutlength2: "0" # for 3'end cut
+  morelength1: "0" # for 5'end cut, if positive and negative LEN values in one command
+  morelength2: "0" # for 3'end cut
+  # fastp options
+  trimfront1: "12" # fastp option, to cut the beginning of first read
+  trimfront2: "0" # fastp option, to cut the beginning of second read  if paired end data
+  trimtail1: "0" # fastp option, to cut the tail of first read
+  trimtail2: "0" # fastp option, to cut the beginning of second read  if paired end data
+
+
+## READ length
+#######################################################################
+rlength: "88" # length -1 for STAR aligner, e.g. if read lenght was 101 and 89 after trimming, do 88 -1
+
+
+##Strandness
+#######################################################################
+### Depend on tools specified previously for value
+### can be:
+### fetureCounts: '0' (unstranded), '1' (stranded) and '2' (reversely stranded)
+### HTSeqCounts: yes', 'no', or 'reverse'. 'reverse' means 'yes' with reversed strand interpretation
+stranded: '1'
+
+
+## Threshold for statistics
+#######################################################################
+filtering_method: "edger" # for DESEQ2 only, can be edger, deseq (counts > 10) or default (counts > 1)
+pval : "0.05"
+logFC: "1"
+
+
+## Params for gprofiler
+#######################################################################
+### keep the structure as dict for the script
+gpro:
+  go_sources: ['GO:BP', 'GO:CC', 'GO:MF']
+  pathway: ['KEGG', 'REAC', 'WP']
+  complex: 'CORUM'
+  correction: "false_discovery_rate" # can be "g_SCS", "bonferroni", "fdr", "false_discovery_rate", "gSCS", "analytical"
+  pval_threshold: 0.05
+  term_nb: 15 # number of terms to plot in dotplot, max. 30
+
+
+## Params for report
+#######################################################################
+report:
+  context: "Context"
+  comments: "No comments"
+  acknowledgements: "No acknowledgements"
+  author: "FirstName LastName"
+  filename: "report_project_test" # add filename for report without extension
+
+
+#######################################################################
+# author: "Julie Ripoll & Céline Mandier"
+# created: "2022-09-08"
+# license: "CeCILL"
+# version: "0.1.0"
