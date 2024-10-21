@@ -19,13 +19,13 @@ Please use the following information to cite the package and the overall approac
 
 Overview
 --------
-The Translatome Regulations Analysis In a Nutshell (TRAIN) project consists in an Snakemake workflow to study the translational efficiency by comparing two different fractions of mRNA NGS sequencing.
+The Translatome Regulations Analysis In a Nutshell (TRAIN) project consists in a Snakemake workflow to study the translational efficiency by comparing two different fractions of mRNA NGS sequencing.
 
 This workflow has different configuration modes:
     * classic: comparison of two conditions e.g. control vs. treatment
     * kinetic: additional time factor
 
-It uses Conda environments to facilitate its re-usability, portability and maintain in the time.
+It uses Conda environments to facilitate its re-usability, portability and maintain in the time. These environments use packages from Conda-forge and Bioconda channels.
 
 The workflow performs quality check of fastq files, trimming, mapping, counting, differential expression and enrichment analyses. 
 It can be applied to single-end or paired-end data.
@@ -61,7 +61,7 @@ Requirements
     * Minimal configuration: 2 conditions to compare (e.g. a control vs. a treatment or two treatments)
     * The transcriptome and translatome should be sequenced with the same technology on a same pool to avoid technical biais.
     * Python version >= 3.10
-    * Snakemake version >= 7.14.0
+    * Snakemake version >= 7.12.0
     * Conda and/or Mamba
     * Download from distant databases for snakefiles 00 and 06
 
