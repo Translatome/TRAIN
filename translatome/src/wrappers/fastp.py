@@ -169,7 +169,7 @@ def create_fastp(input, output, params, log, **kwargs):
 
     Examples
     --------
-    >>> from snakemake.io import Params
+    >>> from wrappers.wrapper_system import Params
     >>> from wrappers.wrapper_system import _StubParams
     >>> input = _StubParams("input")
     >>> log = _StubParams("log")

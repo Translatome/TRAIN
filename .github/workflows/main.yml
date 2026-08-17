@@ -28,7 +28,7 @@ jobs:
   # Build job
   build_doc:
     runs-on: ubuntu-latest
-    container: snakemake/snakemake:v7.12.0
+    container: snakemake/snakemake:v9.25.1
     steps:
       - uses: actions/checkout@v4
       - name: build documentation

@@ -73,7 +73,7 @@ def create_samtools_sort(input, output, params, log, **kwargs):
 
     Examples
     --------
-    >>> from snakemake.io import Params
+    >>> from wrappers.wrapper_system import Params
     >>> from wrappers.wrapper_system import _StubParams
     >>> input = _StubParams("input")
     >>> log = _StubParams("log")
@@ -151,7 +151,7 @@ def create_samtools_index(input, output, params, log, **kwargs):
 
     Examples
     --------
-    >>> from snakemake.io import Params
+    >>> from wrappers.wrapper_system import Params
     >>> from wrappers.wrapper_system import _StubParams
     >>> input = _StubParams("input")
     >>> log = _StubParams("log")
@@ -209,7 +209,7 @@ def create_samtools_flagstat(input, output, params, **kwargs):
 
     Examples
     --------
-    >>> from snakemake.io import Params
+    >>> from wrappers.wrapper_system import Params
     >>> from wrappers.wrapper_system import _StubParams
     >>> input = _StubParams("input")
     >>> output = _StubParams("output")
@@ -282,7 +282,7 @@ def create_samtools_stats(input, output, params, **kwargs):
 
     Examples
     --------
-    >>> from snakemake.io import Params
+    >>> from wrappers.wrapper_system import Params
     >>> from wrappers.wrapper_system import _StubParams
     >>> input = _StubParams("input")
     >>> output = _StubParams("output")
@@ -391,7 +391,7 @@ def create_samtools_view(input, output, params, **kwargs):
 
     Examples
     --------
-    >>> from snakemake.io import Params
+    >>> from wrappers.wrapper_system import Params
     >>> from wrappers.wrapper_system import _StubParams
     >>> input = _StubParams("input")
     >>> output = _StubParams("output")

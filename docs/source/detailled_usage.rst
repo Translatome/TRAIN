@@ -23,7 +23,7 @@ For all Snakefiles, the rule **all** always takes in input the end files needed 
 These snakfiles use various conda environments available in the *envs* folder, as YAML files.
 
 .. note::
-    Environments created by Snakemake can be re-used if they were created through the ``--use-conda`` option and if the YAML file was not modified.
+    Environments created by Snakemake can be re-used if they were created through the ``--sdm conda`` option and if the YAML file was not modified.
 
 
 
@@ -77,7 +77,7 @@ And run the following command, replace *config_[SE/PE].yml* by your configuratio
 
 .. code-block:: bash
 
-   snakemake -s translatome/workflows/00_download_references.smk --use-conda --conda-frontend mamba --configfile config_[SE/PE].yml -j 1 -n
+   snakemake -s translatome/workflows/00_download_references.smk --sdm conda --configfile config_[SE/PE].yml -j 1 -n
 
 
 Check outputs
@@ -137,7 +137,7 @@ If no errors appear using the dry-run mode, then run the following command to pe
 
 .. code-block:: bash
 
-    snakemake -s translatome/workflows/01_quality_check.smk --use-conda --conda-frontend mamba --configfile config_[SE/PE].yml -j 1 -n
+    snakemake -s translatome/workflows/01_quality_check.smk --sdm conda --configfile config_[SE/PE].yml -j 1 -n
 
 
 Check outputs
@@ -206,7 +206,7 @@ Run the following command (no internet connection required):
 
 .. code-block:: bash
 
-    snakemake -s translatome/workflows/02_clean_data.smk --use-conda --conda-frontend mamba --configfile config_[SE/PE].yml -j 1 -n
+    snakemake -s translatome/workflows/02_clean_data.smk --sdm conda --configfile config_[SE/PE].yml -j 1 -n
 
 
 Check outputs
@@ -267,7 +267,7 @@ If you are satisfied with the data quality after trimming, use the command:
 
 .. code-block:: bash
 
-    snakemake -s translatome/workflows/03_mapping.smk --use-conda --conda-frontend mamba --configfile config_[SE/PE].yml -j 1 -n
+    snakemake -s translatome/workflows/03_mapping.smk --sdm conda --configfile config_[SE/PE].yml -j 1 -n
 
 
 Check outputs
@@ -337,7 +337,7 @@ Run the following command to count the reads:
 
 .. code-block:: bash
 
-    snakemake -s translatome/workflows/04_counts.smk --use-conda --conda-frontend mamba --configfile config_[SE/PE].yml -j 1 -n
+    snakemake -s translatome/workflows/04_counts.smk --sdm conda --configfile config_[SE/PE].yml -j 1 -n
 
 
 Check outputs
@@ -445,7 +445,7 @@ Once the counts have been made and the statistical method selected in the config
 
 .. code-block:: bash
 
-    snakemake -s translatome/workflows/05_stats.smk --use-conda --conda-frontend mamba --configfile config_[SE/PE].yml -j 1 -n
+    snakemake -s translatome/workflows/05_stats.smk --sdm conda --configfile config_[SE/PE].yml -j 1 -n
 
 
 Check outputs
@@ -517,7 +517,7 @@ If the "enrichment" option in the configuration file is set to "gprofiler", then
 
 .. code-block:: bash
 
-    snakemake -s translatome/workflows/06_enrichment.smk --use-conda --conda-frontend mamba --configfile config_[SE/PE].yml -j 1 -n
+    snakemake -s translatome/workflows/06_enrichment.smk --sdm conda --configfile config_[SE/PE].yml -j 1 -n
 
 
 Check outputs

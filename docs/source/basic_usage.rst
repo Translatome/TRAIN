@@ -14,7 +14,7 @@ To run this workflow on a cluster, please refer to the `Snakemake documentation 
 
 The following Snakemake command are used to test or execute each step in the TRAIN workflow.
 
-We use the option for Conda environments: ["--use-conda", "--conda-frontend mamba"] to automatically create the required environment for each rule. Here, Mamba is used to speed up the installation.
+We use the option for Conda environments: "--sdm conda" to automatically create the required environment for each rule. Since Snakemake v9, Conda solves environments with libmamba by default, so no additional frontend option is needed.
 
 The path to the configuration file is defined after the ["--configfile"] option. Have a look at the `configuration <https://translatome.github.io/TRAIN/configuration.html>`_ vignette.
 
@@ -25,7 +25,7 @@ Here, this run shows the documentation associated with the rules using the "-l" 
 
 .. code-block:: bash
 
-    $ snakemake -s translatome/workflows/00_download_references.smk --use-conda --conda-frontend mamba --configfile configs/config_PE.yml -l
+    $ snakemake -s translatome/workflows/00_download_references.smk --sdm conda --configfile configs/config_PE.yml -l
 
 
 Snakefile dry-run mode
@@ -36,7 +36,7 @@ Here, this run tests the execution in dry mode:
 
 .. code-block:: bash
 
-    $ snakemake -s translatome/workflows/00_download_references.smk --use-conda --conda-frontend mamba --configfile configs/config_PE.yml -j 1 -p -r -k -n
+    $ snakemake -s translatome/workflows/00_download_references.smk --sdm conda --configfile configs/config_PE.yml -j 1 -p -k -n
 
 
 Run the snakefile
@@ -45,7 +45,7 @@ To run the snakefile:
 
 .. code-block:: bash
 
-    $ snakemake -s translatome/workflows/00_download_references.smk --use-conda --conda-frontend mamba --configfile configs/config_PE.yml -j 1 -p -r -k
+    $ snakemake -s translatome/workflows/00_download_references.smk --sdm conda --configfile configs/config_PE.yml -j 1 -p -k
 
 
 Execution order
@@ -55,19 +55,19 @@ We recommand to the users to see the results of each smk process before the next
 
 .. code-block:: bash
 
-    $ snakemake -s translatome/workflows/00_download_references.smk --use-conda --conda-frontend mamba --configfile configs/config_PE.yml -j 1 -p -r -k
+    $ snakemake -s translatome/workflows/00_download_references.smk --sdm conda --configfile configs/config_PE.yml -j 1 -p -k
 
-    $ snakemake -s translatome/workflows/01_quality_check.smk --use-conda --conda-frontend mamba --configfile configs/config_PE.yml -j 1 -p -r -k
+    $ snakemake -s translatome/workflows/01_quality_check.smk --sdm conda --configfile configs/config_PE.yml -j 1 -p -k
 
-    $ snakemake -s translatome/workflows/02_clean_data.smk --use-conda --conda-frontend mamba --configfile configs/config_PE.yml -j 1 -p -r -k
+    $ snakemake -s translatome/workflows/02_clean_data.smk --sdm conda --configfile configs/config_PE.yml -j 1 -p -k
 
-    $ snakemake -s translatome/workflows/03_mapping.smk --use-conda --conda-frontend mamba --configfile configs/config_PE.yml -j 1 -p -r -k
+    $ snakemake -s translatome/workflows/03_mapping.smk --sdm conda --configfile configs/config_PE.yml -j 1 -p -k
 
-    $ snakemake -s translatome/workflows/04_counts.smk --use-conda --conda-frontend mamba --configfile configs/config_PE.yml -j 1 -p -r -k
+    $ snakemake -s translatome/workflows/04_counts.smk --sdm conda --configfile configs/config_PE.yml -j 1 -p -k
 
-    $ snakemake -s translatome/workflows/05_stats.smk --use-conda --conda-frontend mamba --configfile configs/config_PE.yml -j 1 -p -r -k
+    $ snakemake -s translatome/workflows/05_stats.smk --sdm conda --configfile configs/config_PE.yml -j 1 -p -k
 
-    $ snakemake -s translatome/workflows/06_enrichment.smk --use-conda --conda-frontend mamba --configfile configs/config_PE.yml -j 1 -p -r -k
+    $ snakemake -s translatome/workflows/06_enrichment.smk --sdm conda --configfile configs/config_PE.yml -j 1 -p -k
 
 
 Main outputs

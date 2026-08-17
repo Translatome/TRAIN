@@ -29,7 +29,7 @@ rule all:
 
     Requirements
     ------------
-    - snakemake with python 3.10 min. & conda / miniconda or mamba
+    - snakemake v9 with python 3.11 min. & conda / miniconda
     - FastQC
     - FastqScreen 
     - MultiQC
@@ -40,12 +40,10 @@ rule all:
     ``
     snakemake 
         -s [name_snakefile]
-        --use-conda [use conda env specified in script&config]
-        --conda-frontend mamba [use mamba for faster deployment]
+        --sdm conda [use conda env specified in script&config]
         --configfile [path to config file]
         -j [Number of cores]
         -p [Print rules script]
-        -r [Print the reason for each executed rule]
         -k [Go on with independent jobs if a job fails]
         -n [Check integrity: dry mode before execution]
     ``
@@ -53,10 +51,10 @@ rule all:
     Examples
     --------
     ``
-    >snakemake -s translatome/workflows/01_quality_check.smk --use-conda --conda-frontend mamba --configfile configs/config_PE.yml -j 1 -p -r -k -n
+    >snakemake -s translatome/workflows/01_quality_check.smk --sdm conda --configfile configs/config_PE.yml -j 1 -p -k -n
 
     # print doc
-    >snakemake -s translatome/workflows/01_quality_check.smk --use-conda --conda-frontend mamba --configfile configs/config_PE.yml -l
+    >snakemake -s translatome/workflows/01_quality_check.smk --sdm conda --configfile configs/config_PE.yml -l
     ``
 
     """

@@ -58,7 +58,7 @@ def create_bbmerge(input, output, params, **kwargs):
     Examples
     --------
     >>> from wrappers.wrapper_system import _StubParams
-    >>> from snakemake.io import Params
+    >>> from wrappers.wrapper_system import Params
 
     All optional values should be present
 

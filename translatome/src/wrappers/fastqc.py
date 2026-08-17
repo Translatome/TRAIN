@@ -84,7 +84,7 @@ def create_fastqc(input, output, params, **kwargs):
 
     Examples
     --------
-    >>> from snakemake.io import Params
+    >>> from wrappers.wrapper_system import Params
     >>> from wrappers.wrapper_system import _StubParams
     >>> input = _StubParams("input")
     >>> output = _StubParams("output")

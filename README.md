@@ -37,9 +37,9 @@ Several packages and softwares are used, please quote them if you use one of the
 
 This workflow requires:
 
-- Python version >= 3.10
-- Snakemake version >= 7.12.0
-- Miniconda and Mamba
+- Python version >= 3.11
+- Snakemake version >= 9.25.0
+- Mamba
 - Download from distant databases for steps 00 and 06
 
 Most of the programs are installed using conda environments.
@@ -87,7 +87,7 @@ bash Miniconda3-latest-Linux-x86_64.sh
 > Install Snakemake in a dedicated environment
 
 ```shell
-conda install -c bioconda -c conda-forge -n snakemake snakemake python=3.10
+conda install -c conda-forge -c bioconda -n snakemake snakemake python=3.11
 conda activate snakemake
 ```
 
@@ -190,7 +190,7 @@ In the case of a kinetic analysis, two columns are required for the time to be c
 Here, this run shows the documentation associated to the rules using the "-l" option:
 
 ```shell
-snakemake -s translatome/workflows/00_download_references.smk --use-conda --conda-frontend mamba --configfile configs/config_PE.yml -l
+snakemake -s translatome/workflows/00_download_references.smk --sdm conda --configfile configs/config_PE.yml -l
 ```
 
 ### Run the snakefile in dry-run mode
@@ -198,7 +198,7 @@ snakemake -s translatome/workflows/00_download_references.smk --use-conda --cond
 Here, this run tests the execution in dry mode:
 
 ```shell
-snakemake -s translatome/workflows/00_download_references.smk --use-conda --conda-frontend mamba --configfile configs/config_PE.yml -j 1 -p -r -k -n
+snakemake -s translatome/workflows/00_download_references.smk --sdm conda --configfile configs/config_PE.yml -j 1 -p -k -n
 ```
 
 Remove the -n option to run the workflow.

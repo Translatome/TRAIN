@@ -92,7 +92,7 @@ def create_multiqc(output, params, **kwargs):
 
     Examples
     --------
-    >>> from snakemake.io import Params
+    >>> from wrappers.wrapper_system import Params
     >>> from wrappers.wrapper_system import _StubParams
     >>> output = _StubParams("output")
 

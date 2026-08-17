@@ -37,7 +37,7 @@ Here, this is an example:
 
 .. code-block:: shell
 
-    conda install -c bioconda -c conda-forge -n snakemake snakemake python=3.10
+    conda install -c conda-forge -c bioconda -n snakemake snakemake python=3.11
     conda activate snakemake
 
 

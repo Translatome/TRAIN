@@ -5,7 +5,10 @@ Utils for snakemake wrapper light-weight system
 """
 
 from typing import Union, Callable, Optional
-from snakemake.io import Params
+try:  # snakemake >= 9.15
+    from snakemake.iocontainers import Params
+except ImportError:  # snakemake < 9.15
+    from snakemake.io import Params
 from snakemake.utils import update_config
 
 

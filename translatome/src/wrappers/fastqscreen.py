@@ -50,7 +50,7 @@ def create_FastqScreenDownload(output, params, **kwargs):
 
     Example
     --------
-    >>> from snakemake.io import Params
+    >>> from wrappers.wrapper_system import Params
     >>> from wrappers.wrapper_system import _StubParams
     >>> output = _StubParams("output")
 
@@ -151,7 +151,7 @@ def create_FastqScreen(input, output, params, **kwargs):
     Examples
     --------
 
-    >>> from snakemake.io import Params
+    >>> from wrappers.wrapper_system import Params
     >>> from wrappers.wrapper_system import _StubParams
     >>> input = _StubParams("input")
     >>> output = _StubParams("output")

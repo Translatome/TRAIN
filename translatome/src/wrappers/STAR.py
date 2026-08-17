@@ -59,7 +59,7 @@ def create_STARIndex(input, output, params, **kwargs):
 
     Examples
     --------
-    >>> from snakemake.io import Params
+    >>> from wrappers.wrapper_system import Params
     >>> from wrappers.wrapper_system import _StubParams
     >>> input = _StubParams("input")
     >>> output = _StubParams("output")
@@ -154,7 +154,7 @@ def create_STAR(input, params, log, **kwargs):
 
     Examples
     --------
-    >>> from snakemake.io import Params
+    >>> from wrappers.wrapper_system import Params
     >>> from wrappers.wrapper_system import _StubParams
     >>> input = _StubParams("input")
 
