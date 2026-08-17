@@ -1,0 +1,70 @@
+from pathlib import Path
+
+from snakemake.utils import min_version
+
+min_version("9.0")
+
+
+RESFOL = config["resfol"]
+WORKFLOW_DIR = Path(workflow.basedir) / "workflows"
+MARKERS = RESFOL + "pipeline_steps/"
+
+STEPS = [
+    "00_download_references",
+    "01_quality_check",
+    "02_clean_data",
+    "03_mapping",
+    "04_counts",
+    "05_stats",
+    "06_enrichment",
+]
+
+CONFIGFILES = " ".join(f"--configfile '{c}'" for c in workflow.configfiles)
+EXTRA = config.get("driver_extra_args", "")
+
+#######################################################################
+# ALL IN ONE
+#
+# Use this Snakefile to launch the whole pipeline with a single command
+# line:
+# """
+# snakemake
+#   -s translatome/Snakefile
+#   --sdm conda
+#   --configfile configs/config_PE.yml
+#   -j 2 -p -k -n
+# """
+#
+# Requirements:
+# - snakemake v9 with python 3.11 min.
+# - option '-j' at '2' min.
+#######################################################################
+
+rule all:
+    default_target: True
+    input:
+        MARKERS + STEPS[-1] + ".done",
+
+
+for position, step in enumerate(STEPS):
+
+    rule:
+        name:
+            step
+        message:
+            f"--- {step} ---"
+        input:
+            [MARKERS + STEPS[position - 1] + ".done"] if position else [],
+        output:
+            touch(MARKERS + step + ".done"),
+        log:
+            MARKERS + step + ".log",
+        params:
+            snakefile=str(WORKFLOW_DIR / f"{step}.smk"),
+            configfiles=CONFIGFILES,
+            extra=EXTRA,
+        threads: workflow.cores
+        shell:
+            "snakemake --snakefile '{params.snakefile}' {params.configfiles} "
+            "--sdm conda --nolock --cores {threads} {params.extra} "
+            ">{log} 2>&1"

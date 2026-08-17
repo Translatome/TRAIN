@@ -193,7 +193,7 @@ Here, this run shows the documentation associated to the rules using the "-l" op
 snakemake -s translatome/workflows/00_download_references.smk --sdm conda --configfile configs/config_PE.yml -l
 ```
 
-### Run the snakefile in dry-run mode
+### Run the snakefiles in dry-run mode
 
 Here, this run tests the execution in dry mode:
 
@@ -226,5 +226,14 @@ Take a look at all the log files before moving on to the next steps.
 > - BioProject [PRJNA741225](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA741225) 75bp paired_end data, [Therizols et al. (2022)](https://doi.org/10.1038/s41467-021-27847-8), *Homo sapiens*, Illumina NextSeq 500
 > - BioProject [PRJNA397005](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA397005) 100bp single_end data, [Bernabo et al. (2017)](https://doi.org/10.1016/j.celrep.2017.10.010), *Mus muculus*, Illumina HiSeq 2000
 
+### ALL IN ONE
+
+Use the **workflow/Snakefile** to launch the whole pipeline with a single command line:
+```shell
+snakemake -s translatome/Snakefile --sdm conda --configfile configs/config_PE.yml -j 2 -p -k -n
+```
+Requirements:
+- snakemake v9 with python 3.11 min.
+- option '-j' at '2' min.
 
 [<small>[top↑]</small>](#)
