@@ -1,0 +1,7 @@
+services:
+  snakemake:
+    image: snakemake/snakemake:v9.25.1
+    stdin_open: true # docker run -i
+    tty: true
+    volumes:
+      - ./:/tmp/repo
